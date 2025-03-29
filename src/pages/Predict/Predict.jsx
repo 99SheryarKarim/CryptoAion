@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import "./predict.css"
+import "../Predict/Predict.css"
 
 const Predict = () => {
   const [selectedItem, setSelectedItem] = useState(null)
