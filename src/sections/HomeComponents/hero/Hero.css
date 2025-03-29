@@ -1,0 +1,221 @@
+/* Main Hero Section */
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #1e2340;
+    padding: 60px 5%;
+    gap: 40px;
+    box-sizing: border-box;
+}
+
+/* Left Section Styling */
+.hero-left {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+    font-size: 38px;
+    line-height: 1.2;
+}
+
+/* Responsive Heading */
+.hero-left h1 {
+    font-size: clamp(28px, 4vw, 48px);
+    margin-bottom: 30px;
+    margin-left: 20px;
+    font-family: "Chakra Petch", sans-serif;
+    line-height: 1.2;
+}
+
+/* Responsive Paragraph */
+.hero-left p {
+    font-size: clamp(16px, 2vw, 20px);
+    max-width: 90%;
+    margin-left: 20px;
+    line-height: 1.5;
+    color: rgb(240, 234, 225);
+    font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+}
+
+/* Button Container */
+.hero-buttons {
+    display: flex;
+    gap: 20px;
+    margin-top: 40px;
+    margin-left: 20px;
+    flex-wrap: wrap;
+}
+
+/* Pricing Table Button */
+.pricing-btn {
+    background-color: #30aca6;
+    color: white;
+    font-size: clamp(14px, 2vw, 18px);
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 4px 10px rgba(48, 172, 166, 0.5);
+}
+
+/* Download App Button */
+.download-btn {
+    background-color: #ffd700;
+    color: black;
+    font-size: clamp(14px, 2vw, 18px);
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 4px 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Button Hover Effects */
+.pricing-btn:hover {
+    background-color: #258d89;
+    transform: scale(1.1);
+    box-shadow: 0px 6px 15px rgba(48, 172, 166, 0.7);
+}
+
+.download-btn:hover {
+    background-color: #e6c200;
+    transform: scale(1.1);
+    box-shadow: 0px 6px 15px rgba(255, 215, 0, 0.7);
+}
+
+/* Right Section Styling */
+.hero-right {
+    width: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Image Styling */
+.hero-image {
+    width: 80%;
+    max-width: 500px;
+    height: auto;
+    filter: drop-shadow(0px 0px 20px rgba(48, 172, 166, 0.7));
+    animation: floatAnimation 1.2s infinite ease-in-out alternate;
+}
+
+/* Floating Animation */
+@keyframes floatAnimation {
+    0% {
+        transform: translate3d(0px, 2px, 0px);
+    }
+    100% {
+        transform: translate3d(0px, -10px, 0px);
+    }
+}
+
+/* 🔹 Responsive Design for Tablets & Mobile */
+@media (max-width: 1024px) {
+    .hero {
+        flex-direction: column-reverse; /* Moves image above text */
+        text-align: center;
+        height: auto;
+        padding: 80px 5%;
+        gap: 30px;
+    }
+
+    .hero-left,
+    .hero-right {
+        width: 100%;
+    }
+
+    .hero-left h1,
+    .hero-left p {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .hero-left p {
+        margin: 0 auto 20px;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+        margin-left: 0;
+    }
+
+    .hero-image {
+        width: 70%;
+        max-width: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero {
+        padding: 60px 5%;
+        gap: 20px;
+    }
+
+    .hero-left h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+
+    .hero-left p {
+        font-size: 16px;
+    }
+
+    .hero-buttons {
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .pricing-btn,
+    .download-btn {
+        padding: 10px 20px;
+    }
+
+    .hero-image {
+        width: 80%;
+        max-width: 350px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        padding: 40px 4%;
+    }
+
+    .hero-left h1 {
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .hero-left p {
+        font-size: 14px;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        width: 100%;
+        max-width: 250px;
+        margin: 20px auto 0;
+        gap: 12px;
+    }
+
+    .pricing-btn,
+    .download-btn {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 14px;
+    }
+
+    .hero-image {
+        width: 90%;
+        max-width: 280px;
+    }
+}

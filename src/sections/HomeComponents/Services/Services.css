@@ -1,0 +1,142 @@
+.services-section {
+    padding: 80px 0;
+    background-color: rgb(15 23 13 / 92%);
+  }
+  
+  .services-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .services-header {
+    max-width: 800px;
+    margin: 0 auto 60px;
+    text-align: center;
+  }
+  
+  .services-title {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #ffffff;
+  }
+  
+  .highlight {
+    color: #22d3ee;
+  }
+  
+  .services-tabs {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .tabs-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+  
+  .tab-button {
+    padding: 12px 16px;
+    background-color: rgba(15, 23, 42, 0.5);
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #d1d5db;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .tab-button.active {
+    background-color: rgba(34, 211, 238, 0.1);
+    border-color: #22d3ee;
+    color: #22d3ee;
+  }
+  
+  .tab-button:hover:not(.active) {
+    background-color: rgba(15, 23, 42, 0.8);
+  }
+  
+  .tabs-content {
+    background-color: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(8px);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 24px;
+  }
+  
+  .tab-panel {
+    display: none;
+  }
+  
+  .tab-panel.active {
+    display: block;
+    animation: fadeIn 0.5s ease forwards;
+  }
+  
+  .panel-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #22d3ee;
+    margin-bottom: 24px;
+  }
+  
+  .panel-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .panel-item {
+    display: flex;
+    align-items: center;
+  }
+  
+  .item-icon {
+    color: #22d3ee;
+    margin-right: 12px;
+  }
+  
+  .item-text {
+    color: #d1d5db;
+  }
+  
+  /* Animation */
+  .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  
+  .fade-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .services-title {
+      font-size: 40px;
+    }
+  
+    .tabs-header {
+      justify-content: center;
+    }
+  }
+  
+  

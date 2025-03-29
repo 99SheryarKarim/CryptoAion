@@ -1,0 +1,170 @@
+/* Reset Default Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Header Styles */
+.header {
+  background-color: #000;
+  color: #fff;
+  padding: 15px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo img {
+  height: 40px;
+  margin-right: 10px;
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Navigation Menu */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-menu ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 30px; /* ✅ Reduced spacing to fit in one row */
+}
+
+.nav-menu li {
+  margin: 0;
+  white-space: nowrap; /* ✅ Prevents "Contact Us" & "Go Premium" from breaking */
+}
+
+.nav-menu a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+.nav-menu a:hover {
+  color: #ffcc00;
+}
+
+.nav-menu a.active {
+  color: #ffcc00;
+}
+
+/* Contact Button */
+.contact-btn {
+  background-color: #26b9a5;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-left: 20px;
+  white-space: nowrap; /* ✅ Prevents "Contact Us" from breaking */
+  transition: background-color 0.3s ease;
+}
+
+.contact-btn:hover {
+  background-color: #1e9d8d;
+}
+
+/* Hamburger Menu Styles */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30px;
+  height: 21px;
+  cursor: pointer;
+}
+
+.menu-toggle span {
+  display: block;
+  height: 3px;
+  width: 100%;
+  background-color: #fff;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+/* Responsive Navigation */
+@media (max-width: 992px) {
+  .menu-toggle {
+    display: flex;
+  }
+
+  .nav-menu {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background-color: #000;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+  }
+
+  .nav-menu.active {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .nav-menu ul {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .nav-menu li {
+    margin: 10px 0;
+    width: 100%;
+  }
+
+  .contact-btn {
+    margin: 15px 0 0 0;
+  }
+
+  /* Animate Hamburger */
+  .menu-toggle.active span:nth-child(1) {
+    transform: translateY(9px);
+  }
+
+  .menu-toggle.active span:nth-child(2) {
+    opacity: 1;
+  }
+
+  .menu-toggle.active span:nth-child(3) {
+    transform: translateY(-9px);
+  }
+}

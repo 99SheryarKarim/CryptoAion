@@ -1,0 +1,139 @@
+.why-choose-section {
+    padding: 80px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .why-choose-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  
+  .why-choose-bg-circle-1 {
+    position: absolute;
+    top: 160px;
+    right: 80px;
+    width: 300px;
+    height: 300px;
+    background-color: rgba(34, 211, 238, 0.1);
+    border-radius: 50%;
+    filter: blur(60px);
+  }
+  
+  .why-choose-bg-circle-2 {
+    position: absolute;
+    bottom: 80px;
+    left: 40px;
+    width: 400px;
+    height: 400px;
+    background-color: rgba(168, 85, 247, 0.1);
+    border-radius: 50%;
+    filter: blur(70px);
+  }
+  
+  .why-choose-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+  }
+  
+  .why-choose-header {
+    max-width: 800px;
+    margin: 0 auto 60px;
+    text-align: center;
+  }
+  
+  .why-choose-title {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #ffffff;
+  }
+  
+  .highlight {
+    color: #22d3ee;
+  }
+  
+  .why-choose-description {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #d1d5db;
+  }
+  
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .feature-card {
+    background-color: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(8px);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 24px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px -5px rgba(34, 211, 238, 0.1);
+  }
+  
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    background-color: rgba(34, 211, 238, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  
+  .feature-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #22d3ee;
+    margin: 0 0 12px;
+  }
+  
+  .feature-description {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #d1d5db;
+    margin: 0;
+  }
+  
+  /* Animation */
+  .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  
+  .fade-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  @media (min-width: 768px) {
+    .why-choose-title {
+      font-size: 40px;
+    }
+  
+    .features-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .features-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  

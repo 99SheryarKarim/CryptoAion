@@ -1,0 +1,36 @@
+.join-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #2a3055;
+  color: white;
+  text-align: center;
+}
+
+.join-content {
+  max-width: 600px;
+  padding: 20px;
+}
+
+.join-heading {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.join-button {
+  background-color: #ff9900;
+  color: #121212;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+}
+
+.join-button:hover {
+  background-color: #e68a00;
+}

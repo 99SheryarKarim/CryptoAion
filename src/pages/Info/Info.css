@@ -1,0 +1,60 @@
+.faq-container {
+  background-color: #1c2030; /* Same as auth-container */
+  color: white; /* Ensures text is visible */
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.faq-heading {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #3eb8b0, #8cdbf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.faq-subtitle {
+  text-align: center;
+  color: #a0a0a0;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.faq-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.faq-item {
+  background-color: #252a3d; /* Same as auth-card */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.faq-item.active {
+  background-color: #3a415a;
+}
+
+.faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.faq-icon {
+  font-size: 24px;
+  color: #3eb8b0;
+}
+
+.faq-answer {
+  margin-top: 10px;
+  color: #cfcfcf;
+  font-size: 16px;
+}
