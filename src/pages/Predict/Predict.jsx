@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import "../Predict/Predict.css"
+import { Info, TrendingUp, BarChart2, DollarSign, Clock, Award, AlertTriangle, PieChart } from "lucide-react"
+import "./predict.css"
 
 const Predict = () => {
   const [selectedItem, setSelectedItem] = useState(null)
@@ -13,10 +14,13 @@ const Predict = () => {
   const [isPredicting, setIsPredicting] = useState(false)
   const [probabilityData, setProbabilityData] = useState(null)
   const [showProbability, setShowProbability] = useState(false)
-  const [animationProgress, setAnimationProgress] = useState(0)
   const [notification, setNotification] = useState(null)
-  const [liveUpdateActive, setLiveUpdateActive] = useState(true)
+  const [pendingTimeframe, setPendingTimeframe] = useState(null)
+  const [coinDetails, setCoinDetails] = useState(null)
+  const [coinStats, setCoinStats] = useState(null)
+  const [showStats, setShowStats] = useState(false)
   const chartRef = useRef(null)
+  const statsChartRef = useRef(null)
   const animationRef = useRef(null)
   const liveUpdateRef = useRef(null)
 
@@ -27,69 +31,268 @@ const Predict = () => {
       window.location.href = "/" // Redirect to home if no item is selected
       return
     }
-    setSelectedItem(JSON.parse(item))
+    const parsedItem = JSON.parse(item)
+    setSelectedItem(parsedItem)
+
+    // Fetch coin details from API
+    fetchCoinDetails(parsedItem)
   }, [])
 
-  // Fetch historical data for the chart
-  useEffect(() => {
-    if (!selectedItem) return
+  // Fetch coin details from CoinCap API
+  const fetchCoinDetails = async (item) => {
+    if (!item) return
 
-    const fetchHistoricalData = async () => {
-      setLoading(true)
-      setError(null) // Clear any previous errors
+    try {
+      const symbol = item.symbol.toLowerCase()
 
-      try {
-        // Use CoinCap API instead of CoinGecko (free, no rate limits)
-        let data = []
+      // Fetch coin data from CoinCap API
+      const response = await fetch(`https://api.coincap.io/v2/assets/${symbol}`)
 
-        if (!selectedItem.sector) {
-          // For crypto, fetch from CoinCap API
-          const symbol = selectedItem.symbol.toLowerCase()
-          const interval = timeframeToInterval(timeframe)
-          const start = getStartTime(timeframe)
-          const end = Date.now()
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
 
-          const apiUrl = `https://api.coincap.io/v2/assets/${symbol}/history?interval=${interval}&start=${start}&end=${end}`
+      const data = await response.json()
+      const coinData = data.data
 
-          const response = await fetch(apiUrl)
+      // Calculate additional metrics
+      const marketDominance = (Number.parseFloat(coinData.marketCapUsd) / 2500000000000) * 100 // Assuming total market cap of 2.5T
+      const volatilityScore = item.price_change_percentage_24h
+        ? Math.abs(item.price_change_percentage_24h) / 2
+        : Number.parseFloat(coinData.changePercent24Hr)
+          ? Math.abs(Number.parseFloat(coinData.changePercent24Hr)) / 5
+          : Math.random() * 5
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`)
-          }
+      // Generate random sentiment data (this would ideally come from a sentiment analysis API)
+      const sentimentData = {
+        bullish: Math.floor(Math.random() * 70) + 30,
+        bearish: Math.floor(Math.random() * 40),
+        neutral: Math.floor(Math.random() * 30),
+      }
 
-          const jsonData = await response.json()
+      // Normalize sentiment to 100%
+      const total = sentimentData.bullish + sentimentData.bearish + sentimentData.neutral
+      sentimentData.bullish = Math.floor((sentimentData.bullish / total) * 100)
+      sentimentData.bearish = Math.floor((sentimentData.bearish / total) * 100)
+      sentimentData.neutral = 100 - sentimentData.bullish - sentimentData.bearish
 
-          // Format the data for our chart
-          data = jsonData.data.map((item) => ({
-            time: new Date(item.time).toLocaleTimeString(),
-            price: Number.parseFloat(item.priceUsd),
-            fullTime: new Date(item.time),
-          }))
-        } else {
-          // For stocks, generate realistic data
-          data = generateRealisticData(selectedItem, timeframe)
-        }
+      // Fetch market data for exchanges (in a real app, this would come from an API)
+      const exchanges = [
+        { name: "Binance", volume: Math.floor(Math.random() * 40) + 20 },
+        { name: "Coinbase", volume: Math.floor(Math.random() * 30) + 10 },
+        { name: "Kraken", volume: Math.floor(Math.random() * 20) + 5 },
+        { name: "FTX", volume: Math.floor(Math.random() * 15) + 5 },
+        { name: "Others", volume: Math.floor(Math.random() * 20) + 5 },
+      ]
 
-        setChartData(data)
-        setLoading(false)
+      // Normalize exchange volume to 100%
+      const totalVolume = exchanges.reduce((sum, exchange) => sum + exchange.volume, 0)
+      exchanges.forEach((exchange) => {
+        exchange.percentage = Math.floor((exchange.volume / totalVolume) * 100)
+      })
 
-        // Start live updates after initial data is loaded
-        startLiveUpdates()
-      } catch (err) {
-        console.error("Error fetching historical data:", err)
+      // Set coin details with API data
+      setCoinDetails({
+        id: coinData.id,
+        name: coinData.name,
+        symbol: coinData.symbol,
+        priceUsd: Number.parseFloat(coinData.priceUsd),
+        marketCapUsd: Number.parseFloat(coinData.marketCapUsd),
+        volumeUsd24Hr: Number.parseFloat(coinData.volumeUsd24Hr),
+        supply: Number.parseFloat(coinData.supply),
+        maxSupply: Number.parseFloat(coinData.maxSupply),
+        changePercent24Hr: Number.parseFloat(coinData.changePercent24Hr),
+        vwap24Hr: Number.parseFloat(coinData.vwap24Hr),
+        explorer: coinData.explorer,
+        rank: Number.parseInt(coinData.rank),
+        marketDominance,
+        volatilityScore,
+        liquidityScore: Math.min(95, Math.max(30, Math.floor(Math.random() * 100))),
+        sentimentData,
+        exchanges,
+        description: generateCoinDescription(item),
+        priceHistory: {
+          allTimeHigh: item.ath || Number.parseFloat(coinData.priceUsd) * (1 + Math.random()),
+          allTimeLow: item.atl || Number.parseFloat(coinData.priceUsd) * (1 - Math.random() * 0.9),
+          yearToDateChange: Math.floor(Math.random() * 200) - 50, // -50% to +150%
+        },
+      })
 
-        // Generate realistic data based on the selected item
-        const mockData = generateRealisticData(selectedItem, timeframe)
-        setChartData(mockData)
+      // Generate stats for the Stats tab
+      generateCoinStats(coinData)
+    } catch (err) {
+      console.error("Error fetching coin details:", err)
+      // Fallback to using the data we have
+      generateCoinDetails(item)
+    }
+  }
 
-        setLoading(false)
+  // Generate coin stats for the Stats tab
+  const generateCoinStats = (coinData) => {
+    if (!coinData) return
 
-        // Start live updates after initial data is loaded
-        startLiveUpdates()
+    // Calculate probability of increase based on recent performance
+    const changePercent = Number.parseFloat(coinData.changePercent24Hr) || 0
+    const vwap = Number.parseFloat(coinData.vwap24Hr) || 0
+    const currentPrice = Number.parseFloat(coinData.priceUsd) || 0
+
+    // Calculate probability (this is a simplified model)
+    let probabilityIncrease = 50 // Base probability
+
+    // Adjust based on 24h change
+    if (changePercent > 0) {
+      probabilityIncrease += Math.min(20, changePercent * 2)
+    } else {
+      probabilityIncrease -= Math.min(20, Math.abs(changePercent) * 2)
+    }
+
+    // Adjust based on price vs VWAP
+    if (vwap > 0) {
+      const vwapDiff = ((currentPrice - vwap) / vwap) * 100
+      if (vwapDiff > 0) {
+        probabilityIncrease -= Math.min(10, vwapDiff * 2) // Above VWAP might indicate overbought
+      } else {
+        probabilityIncrease += Math.min(10, Math.abs(vwapDiff) * 2) // Below VWAP might indicate potential rise
       }
     }
 
-    fetchHistoricalData()
+    // Adjust based on market cap rank
+    const rank = Number.parseInt(coinData.rank) || 100
+    if (rank <= 10) {
+      probabilityIncrease += 5 // Top coins tend to be more stable
+    } else if (rank <= 50) {
+      probabilityIncrease += 2
+    }
+
+    // Ensure probability is between 1 and 99
+    probabilityIncrease = Math.max(1, Math.min(99, Math.round(probabilityIncrease)))
+
+    // Set coin stats
+    setCoinStats({
+      probabilityIncrease,
+      marketCapRank: Number.parseInt(coinData.rank) || 0,
+      changePercent24Hr: changePercent,
+      supply: {
+        current: Number.parseFloat(coinData.supply) || 0,
+        max: Number.parseFloat(coinData.maxSupply) || 0,
+        percentCirculating: coinData.maxSupply
+          ? (Number.parseFloat(coinData.supply) / Number.parseFloat(coinData.maxSupply)) * 100
+          : 100,
+      },
+      volumeRank: Math.floor(Math.random() * 20) + 1, // This would come from API in a real app
+      volatility: Math.abs(changePercent) || Math.random() * 5,
+      marketShare: (Number.parseFloat(coinData.marketCapUsd) / 2500000000000) * 100, // Assuming total market cap of 2.5T
+    })
+  }
+
+  // Generate detailed information about the coin (fallback if API fails)
+  const generateCoinDetails = (item) => {
+    if (!item) return
+
+    // Calculate some additional metrics
+    const marketDominance = ((item.market_cap || 0) / 2500000000000) * 100 // Assuming total market cap of 2.5T
+    const volatilityScore = item.price_change_percentage_24h
+      ? Math.abs(item.price_change_percentage_24h) / 2
+      : Math.random() * 5
+    const liquidityScore = Math.min(95, Math.max(30, Math.floor(Math.random() * 100)))
+
+    // Generate random sentiment data
+    const sentimentData = {
+      bullish: Math.floor(Math.random() * 70) + 30,
+      bearish: Math.floor(Math.random() * 40),
+      neutral: Math.floor(Math.random() * 30),
+    }
+
+    // Normalize sentiment to 100%
+    const total = sentimentData.bullish + sentimentData.bearish + sentimentData.neutral
+    sentimentData.bullish = Math.floor((sentimentData.bullish / total) * 100)
+    sentimentData.bearish = Math.floor((sentimentData.bearish / total) * 100)
+    sentimentData.neutral = 100 - sentimentData.bullish - sentimentData.bearish
+
+    // Generate trading volume by exchange (random data)
+    const exchanges = [
+      { name: "Binance", volume: Math.floor(Math.random() * 40) + 20 },
+      { name: "Coinbase", volume: Math.floor(Math.random() * 30) + 10 },
+      { name: "Kraken", volume: Math.floor(Math.random() * 20) + 5 },
+      { name: "FTX", volume: Math.floor(Math.random() * 15) + 5 },
+      { name: "Others", volume: Math.floor(Math.random() * 20) + 5 },
+    ]
+
+    // Normalize exchange volume to 100%
+    const totalVolume = exchanges.reduce((sum, exchange) => sum + exchange.volume, 0)
+    exchanges.forEach((exchange) => {
+      exchange.percentage = Math.floor((exchange.volume / totalVolume) * 100)
+    })
+
+    setCoinDetails({
+      marketDominance,
+      volatilityScore,
+      liquidityScore,
+      sentimentData,
+      exchanges,
+      description: generateCoinDescription(item),
+      priceHistory: {
+        allTimeHigh: item.ath || item.current_price * (1 + Math.random()),
+        allTimeLow: item.atl || item.current_price * (1 - Math.random() * 0.9),
+        yearToDateChange: Math.floor(Math.random() * 200) - 50, // -50% to +150%
+      },
+    })
+
+    // Generate stats for the Stats tab
+    const probabilityIncrease = Math.floor(Math.random() * 40) + 30 // Random between 30-70%
+
+    setCoinStats({
+      probabilityIncrease,
+      marketCapRank: item.market_cap_rank || 0,
+      changePercent24Hr: item.price_change_percentage_24h || 0,
+      supply: {
+        current: item.circulating_supply || 0,
+        max: item.total_supply || 0,
+        percentCirculating: item.total_supply ? (item.circulating_supply / item.total_supply) * 100 : 100,
+      },
+      volumeRank: Math.floor(Math.random() * 20) + 1,
+      volatility: Math.abs(item.price_change_percentage_24h) || Math.random() * 5,
+      marketShare: ((item.market_cap || 0) / 2500000000000) * 100, // Assuming total market cap of 2.5T
+    })
+  }
+
+  // Generate a description for the coin
+  const generateCoinDescription = (item) => {
+    const descriptions = [
+      `${item.name} is a decentralized digital currency that enables instant payments to anyone, anywhere in the world.`,
+      `${item.name} is a blockchain platform that enables developers to build and deploy decentralized applications.`,
+      `${item.name} is a digital asset designed to work as a medium of exchange that uses strong cryptography to secure financial transactions.`,
+      `${item.name} is a cryptocurrency that aims to offer fast, secure, and low-cost digital payments through a decentralized peer-to-peer network.`,
+      `${item.name} is a next-generation blockchain platform designed for scalability, security, and sustainability.`,
+    ]
+
+    return descriptions[Math.floor(Math.random() * descriptions.length)]
+  }
+
+  // Initial data load only when component mounts
+  useEffect(() => {
+    if (!selectedItem) return
+
+    const fetchInitialData = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        // Try to fetch data from CoinCap API
+        const data = await fetchHistoricalData(selectedItem, timeframe)
+        setChartData(data)
+        setLoading(false)
+      } catch (err) {
+        console.error("Error fetching initial data:", err)
+
+        // Fallback to generated data
+        const data = generateRealisticData(selectedItem, timeframe)
+        setChartData(data)
+        setLoading(false)
+      }
+    }
+
+    fetchInitialData()
 
     // Cleanup animation on unmount
     return () => {
@@ -100,83 +303,104 @@ const Predict = () => {
         clearInterval(liveUpdateRef.current)
       }
     }
-  }, [selectedItem, timeframe])
+  }, [selectedItem]) // Only run on initial mount and when selectedItem changes
 
-  // Start live updates to simulate real-time data
-  const startLiveUpdates = () => {
-    // Clear any existing interval
-    if (liveUpdateRef.current) {
-      clearInterval(liveUpdateRef.current)
+  // Draw stats chart when stats data is available
+  useEffect(() => {
+    if (coinStats && statsChartRef.current && showStats) {
+      drawStatsChart()
+    }
+  }, [coinStats, showStats])
+
+  // Fetch historical data from CoinCap API
+  const fetchHistoricalData = async (item, tf) => {
+    if (!item) return []
+
+    const symbol = item.symbol.toLowerCase()
+    const interval = timeframeToInterval(tf)
+    const start = getStartTime(tf)
+    const end = Date.now()
+
+    const apiUrl = `https://api.coincap.io/v2/assets/${symbol}/history?interval=${interval}&start=${start}&end=${end}`
+
+    const response = await fetch(apiUrl)
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
     }
 
-    // Set up new interval for live updates every 2 seconds
-    liveUpdateRef.current = setInterval(() => {
-      if (liveUpdateActive && chartData.length > 0) {
-        updateLiveData()
-      }
-    }, 2000)
+    const jsonData = await response.json()
+
+    // Format the data for our chart
+    return jsonData.data.map((item) => ({
+      time: new Date(item.time).toLocaleTimeString(),
+      price: Number.parseFloat(item.priceUsd),
+      fullTime: new Date(item.time),
+    }))
   }
 
-  // Update chart data to simulate real-time updates
-  const updateLiveData = () => {
-    setChartData((prevData) => {
-      if (!prevData || prevData.length === 0) return prevData
+  // Fetch historical data for the chart - only when predict is clicked
+  const fetchChartData = async () => {
+    if (!selectedItem) return
 
-      // Create a copy of the data
-      const newData = [...prevData]
+    setLoading(true)
+    setError(null)
 
-      // Get the last price
-      const lastPrice = newData[newData.length - 1].price
+    try {
+      // Use the pending timeframe if available, otherwise use current timeframe
+      const tf = pendingTimeframe || timeframe
 
-      // Calculate a realistic price change (small movement)
-      const volatility = selectedItem.price_change_percentage_24h
-        ? Math.abs(selectedItem.price_change_percentage_24h) / 100 / 30
-        : 0.0005
-
-      const priceChange = lastPrice * (1 + (Math.random() - 0.5) * volatility)
-
-      // Update the last point with a slightly different price
-      newData[newData.length - 1] = {
-        ...newData[newData.length - 1],
-        price: priceChange,
+      // Update the active timeframe if there was a pending one
+      if (pendingTimeframe) {
+        setTimeframe(pendingTimeframe)
+        setPendingTimeframe(null)
       }
 
-      // For shorter timeframes, occasionally add a new data point and remove the oldest
-      if (timeframe === "1h" || timeframe === "24h") {
-        if (Math.random() > 0.7) {
-          const lastTime = new Date(newData[newData.length - 1].fullTime)
-          const newTime = new Date(lastTime.getTime() + 60000) // Add 1 minute
+      // Try to fetch data from CoinCap API
+      const data = await fetchHistoricalData(selectedItem, tf)
 
-          newData.push({
-            time: newTime.toLocaleTimeString(),
-            price: priceChange * (1 + (Math.random() - 0.5) * volatility),
-            fullTime: newTime,
-          })
-
-          // Remove the oldest point to keep the array the same length
-          newData.shift()
+      // Apply smooth transition to new data
+      const oldData = [...chartData]
+      const transitionData = (progress) => {
+        const blendedData = data.map((newPoint, i) => {
+          const oldPoint = oldData[i] || oldData[oldData.length - 1] || newPoint
+          return {
+            time: newPoint.time,
+            price: oldPoint.price + (newPoint.price - oldPoint.price) * progress,
+            fullTime: newPoint.fullTime,
+          }
+        })
+        setChartData(blendedData)
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(() => transitionData(Math.min(1, progress + 0.05)))
         }
       }
 
-      return newData
-    })
+      // Start the transition animation
+      transitionData(0)
+      setLoading(false)
+    } catch (err) {
+      console.error("Error fetching historical data:", err)
+
+      // Generate realistic data based on the selected item
+      const mockData = generateRealisticData(selectedItem, pendingTimeframe || timeframe)
+      setChartData(mockData)
+
+      setLoading(false)
+    }
   }
 
   // Convert timeframe to interval for API
   const timeframeToInterval = (tf) => {
     switch (tf) {
+      case "30m":
+        return "m5" // 5 minutes
       case "1h":
         return "m5" // 5 minutes
+      case "4h":
+        return "m15" // 15 minutes
       case "24h":
         return "m30" // 30 minutes
-      case "7d":
-        return "h2" // 2 hours
-      case "30d":
-        return "h12" // 12 hours
-      case "90d":
-        return "d1" // 1 day
-      case "1y":
-        return "d1" // 1 day
       default:
         return "m30"
     }
@@ -186,18 +410,14 @@ const Predict = () => {
   const getStartTime = (tf) => {
     const now = Date.now()
     switch (tf) {
+      case "30m":
+        return now - 30 * 60 * 1000
       case "1h":
         return now - 60 * 60 * 1000
+      case "4h":
+        return now - 4 * 60 * 60 * 1000
       case "24h":
         return now - 24 * 60 * 60 * 1000
-      case "7d":
-        return now - 7 * 24 * 60 * 60 * 1000
-      case "30d":
-        return now - 30 * 24 * 60 * 60 * 1000
-      case "90d":
-        return now - 90 * 24 * 60 * 60 * 1000
-      case "1y":
-        return now - 365 * 24 * 60 * 60 * 1000
       default:
         return now - 24 * 60 * 60 * 1000
     }
@@ -216,29 +436,21 @@ const Predict = () => {
     let interval
 
     switch (timeframe) {
+      case "30m":
+        points = 30
+        interval = 60 * 1000 // 1 minute
+        break
       case "1h":
         points = 60
         interval = 60 * 1000 // 1 minute
         break
+      case "4h":
+        points = 48
+        interval = 5 * 60 * 1000 // 5 minutes
+        break
       case "24h":
         points = 24
         interval = 60 * 60 * 1000 // 1 hour
-        break
-      case "7d":
-        points = 168
-        interval = 60 * 60 * 1000 // 1 hour
-        break
-      case "30d":
-        points = 30
-        interval = 24 * 60 * 60 * 1000 // 1 day
-        break
-      case "90d":
-        points = 90
-        interval = 24 * 60 * 60 * 1000 // 1 day
-        break
-      case "1y":
-        points = 365
-        interval = 24 * 60 * 60 * 1000 // 1 day
         break
       default:
         points = 60
@@ -284,53 +496,7 @@ const Predict = () => {
     if (chartData.length > 0 && chartRef.current) {
       drawChart()
     }
-  }, [chartData, isPredicting, animationProgress])
-
-  // Handle predict button animation
-  useEffect(() => {
-    let animationTimer
-
-    if (isPredicting) {
-      // Reset animation progress
-      setAnimationProgress(0)
-
-      // Animate the line color change from left to right
-      let progress = 0
-      const animateColorChange = () => {
-        progress += 0.01
-        setAnimationProgress(progress)
-
-        if (progress < 1) {
-          animationTimer = setTimeout(animateColorChange, 20)
-        }
-      }
-
-      animationTimer = setTimeout(animateColorChange, 20)
-    }
-
-    return () => {
-      if (animationTimer) {
-        clearTimeout(animationTimer)
-      }
-    }
-  }, [isPredicting])
-
-  // Handle notification timeout
-  useEffect(() => {
-    let notificationTimer
-
-    if (notification) {
-      notificationTimer = setTimeout(() => {
-        setNotification(null)
-      }, 5000)
-    }
-
-    return () => {
-      if (notificationTimer) {
-        clearTimeout(notificationTimer)
-      }
-    }
-  }, [notification])
+  }, [chartData, isPredicting])
 
   // Draw the chart using canvas
   const drawChart = () => {
@@ -342,26 +508,9 @@ const Predict = () => {
     // Clear the canvas
     ctx.clearRect(0, 0, width, height)
 
-    // Draw grid lines
-    ctx.beginPath()
-    ctx.strokeStyle = "#333"
-    ctx.lineWidth = 0.5
-
-    // Horizontal grid lines
-    for (let i = 0; i < 6; i++) {
-      const y = i * (height / 5)
-      ctx.moveTo(0, y)
-      ctx.lineTo(width, y)
-    }
-
-    // Vertical grid lines
-    for (let i = 0; i < 7; i++) {
-      const x = i * (width / 6)
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x, height)
-    }
-
-    ctx.stroke()
+    // Fill background - slightly lighter dark gray with a hint of blue
+    ctx.fillStyle = "#121621"
+    ctx.fillRect(0, 0, width, height)
 
     // Calculate min and max prices for scaling
     const prices = chartData.map((d) => d.price)
@@ -369,36 +518,61 @@ const Predict = () => {
     const maxPrice = Math.max(...prices) * 1.01
     const priceRange = maxPrice - minPrice
 
-    // Draw price labels on y-axis
+    // Draw price labels on right side of the chart only
     ctx.fillStyle = "#999"
     ctx.font = "10px Arial"
-    ctx.textAlign = "left"
+    ctx.textAlign = "right"
 
     for (let i = 0; i < 6; i++) {
       const y = height - i * (height / 5)
       const price = minPrice + (i / 5) * priceRange
-      ctx.fillText(`$${price.toFixed(2)}`, 5, y - 5)
+      ctx.fillText(`${price.toFixed(1)}`, width - 5, y - 5)
     }
 
-    // Draw time labels on x-axis
-    const step = Math.max(1, Math.floor(chartData.length / 6))
-    for (let i = 0; i < chartData.length; i += step) {
-      const x = (i / chartData.length) * width
-      let timeLabel
+    // Line color is always orange when predicting, blue otherwise
+    const mainLineColor = isPredicting ? "#ff9632" : "#5bc0de"
 
-      if (timeframe === "1h" || timeframe === "24h") {
-        timeLabel = chartData[i].fullTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      } else {
-        timeLabel = chartData[i].fullTime.toLocaleDateString([], { month: "numeric", day: "numeric" })
-      }
-
-      ctx.fillText(timeLabel, x, height - 5)
+    // Create gradient for the chart area
+    const gradient = ctx.createLinearGradient(0, 0, 0, height)
+    if (isPredicting) {
+      gradient.addColorStop(0, "rgba(255, 150, 50, 0.2)")
+      gradient.addColorStop(0.5, "rgba(255, 150, 50, 0.1)")
+      gradient.addColorStop(1, "rgba(255, 150, 50, 0)")
+    } else {
+      gradient.addColorStop(0, "rgba(91, 192, 222, 0.2)")
+      gradient.addColorStop(0.5, "rgba(91, 192, 222, 0.1)")
+      gradient.addColorStop(1, "rgba(91, 192, 222, 0)")
     }
 
-    // Draw the main blue line
+    // Draw filled area under the line
     ctx.beginPath()
-    ctx.strokeStyle = "#1e88e5"
-    ctx.lineWidth = 2
+    ctx.fillStyle = gradient
+
+    // Start at the bottom left
+    ctx.moveTo(0, height)
+
+    // Draw the line path
+    for (let i = 0; i < chartData.length; i++) {
+      const x = (i / (chartData.length - 1)) * width
+      const y = height - ((chartData[i].price - minPrice) / priceRange) * height
+      ctx.lineTo(x, y)
+    }
+
+    // Complete the path to the bottom right
+    ctx.lineTo(width, height)
+    ctx.closePath()
+    ctx.fill()
+
+    // Add shadow effect for the main line
+    ctx.shadowColor = isPredicting ? "rgba(255, 150, 50, 0.5)" : "rgba(91, 192, 222, 0.5)"
+    ctx.shadowBlur = 8
+    ctx.shadowOffsetX = 0
+    ctx.shadowOffsetY = 4
+
+    // Draw the main line
+    ctx.beginPath()
+    ctx.strokeStyle = mainLineColor
+    ctx.lineWidth = 2.5
 
     for (let i = 0; i < chartData.length; i++) {
       const x = (i / (chartData.length - 1)) * width
@@ -413,60 +587,86 @@ const Predict = () => {
 
     ctx.stroke()
 
-    // If predicting, draw the orange prediction line 3px below the blue line
-    if (isPredicting) {
-      ctx.beginPath()
-      ctx.strokeStyle = "#ff7700"
-      ctx.lineWidth = 2
+    // Reset shadow for other elements
+    ctx.shadowColor = "transparent"
+    ctx.shadowBlur = 0
+    ctx.shadowOffsetX = 0
+    ctx.shadowOffsetY = 0
+  }
 
-      for (let i = 0; i < chartData.length; i++) {
-        const x = (i / (chartData.length - 1)) * width
-        const y = height - ((chartData[i].price - minPrice) / priceRange) * height + 3
-        const segmentPosition = i / chartData.length
+  // Draw the stats chart
+  const drawStatsChart = () => {
+    if (!coinStats || !statsChartRef.current) return
 
-        // Only draw the orange line up to the animation progress
-        if (segmentPosition <= animationProgress) {
-          if (
-            i === 0 ||
-            (segmentPosition <= animationProgress && i > 0 && (i - 1) / chartData.length > animationProgress)
-          ) {
-            ctx.moveTo(x, y)
-          } else {
-            ctx.lineTo(x, y)
-          }
-        }
-      }
+    const canvas = statsChartRef.current
+    const ctx = canvas.getContext("2d")
+    const width = canvas.width
+    const height = canvas.height
 
-      ctx.stroke()
-    }
+    // Clear the canvas
+    ctx.clearRect(0, 0, width, height)
 
-    // Draw dots at data points
-    for (let i = 0; i < chartData.length; i += Math.max(1, Math.floor(chartData.length / 15))) {
-      const x = (i / (chartData.length - 1)) * width
-      const y = height - ((chartData[i].price - minPrice) / priceRange) * height
+    // Fill background
+    ctx.fillStyle = "#121621"
+    ctx.fillRect(0, 0, width, height)
 
-      ctx.beginPath()
-      ctx.arc(x, y, 3, 0, 2 * Math.PI)
-      ctx.fillStyle = "#1e88e5"
-      ctx.fill()
+    // Draw circular gauge
+    const centerX = width / 2
+    const centerY = height / 2
+    const radius = Math.min(width, height) * 0.4
 
-      // If predicting and within animation progress, draw orange dots for prediction
-      if (isPredicting && i / chartData.length <= animationProgress) {
-        ctx.beginPath()
-        ctx.arc(x, y + 3, 3, 0, 2 * Math.PI)
-        ctx.fillStyle = "#ff7700"
-        ctx.fill()
-      }
-    }
+    // Draw background circle
+    ctx.beginPath()
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
+    ctx.strokeStyle = "#333"
+    ctx.lineWidth = 20
+    ctx.stroke()
+
+    // Draw progress arc
+    const probability = coinStats.probabilityIncrease
+    const startAngle = -Math.PI / 2 // Start at top
+    const endAngle = startAngle + (probability / 100) * (2 * Math.PI)
+
+    ctx.beginPath()
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle)
+    ctx.strokeStyle = "#5bc0de"
+    ctx.lineWidth = 20
+    ctx.stroke()
+
+    // Draw text in center
+    ctx.fillStyle = "#fff"
+    ctx.font = "bold 36px Arial"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "middle"
+    ctx.fillText(`${probability}%`, centerX, centerY)
+
+    // Draw label below
+    ctx.font = "16px Arial"
+    ctx.fillStyle = "#aaa"
+    ctx.fillText("Probability of increase in 1 day", centerX, centerY + radius + 40)
   }
 
   // Handle timeframe change
   const handleTimeframeChange = (tf) => {
-    setTimeframe(tf)
+    // Store the selected timeframe but don't update the chart yet
+    setPendingTimeframe(tf)
+
+    // Visual feedback that timeframe was selected
+    const buttons = document.querySelectorAll(".timeframe-button")
+    buttons.forEach((button) => {
+      if (button.textContent === tf) {
+        button.classList.add("pending")
+      } else {
+        button.classList.remove("pending")
+      }
+    })
   }
 
   // Handle predict button click
   const handlePredict = () => {
+    // Fetch new data with the current or pending timeframe
+    fetchChartData()
+
     if (!isPredicting) {
       setIsPredicting(true)
 
@@ -478,7 +678,9 @@ const Predict = () => {
       })
 
       // Generate prediction data based on actual chart data
-      generatePredictionData()
+      setTimeout(() => {
+        generatePredictionData()
+      }, 500)
 
       // Show probability panel after a short delay
       setTimeout(() => {
@@ -574,7 +776,7 @@ const Predict = () => {
       trend: overallTrend,
       confidence,
       predictedPrice,
-      timeframe,
+      timeframe: pendingTimeframe || timeframe,
       volatility: volatility * 100,
       avgDailyChange: avgChange * 100,
       momentum: momentum * 100,
@@ -587,16 +789,16 @@ const Predict = () => {
       sentimentScore,
       riskScore,
       priceIncreaseProb,
-      dataReady: false,
+      dataReady: true,
     })
 
-    // Add a small delay to make the animation more noticeable
-    setTimeout(() => {
-      setProbabilityData((prevData) => ({
-        ...prevData,
-        dataReady: true,
-      }))
-    }, 300)
+    // Update the stats probability with the new prediction
+    if (coinStats) {
+      setCoinStats({
+        ...coinStats,
+        probabilityIncrease: priceIncreaseProb,
+      })
+    }
   }
 
   // Format large numbers
@@ -643,10 +845,39 @@ const Predict = () => {
   // Handle probability button click
   const handleProbabilityClick = () => {
     setShowProbability(!showProbability)
+    setShowStats(false) // Hide stats when showing probability
 
     if (!showProbability && !probabilityData) {
       // Generate prediction data based on actual chart data
       generatePredictionData()
+    }
+  }
+
+  // Handle stats button click
+  const handleStatsClick = () => {
+    setShowStats(!showStats)
+    setShowProbability(false) // Hide probability when showing stats
+
+    // If we're showing stats and don't have stats data yet, generate it
+    if (!showStats && !coinStats && selectedItem) {
+      // Generate stats data if we don't have it yet
+      const probabilityIncrease = Math.floor(Math.random() * 40) + 30 // Random between 30-70%
+
+      setCoinStats({
+        probabilityIncrease,
+        marketCapRank: selectedItem.market_cap_rank || 0,
+        changePercent24Hr: selectedItem.price_change_percentage_24h || 0,
+        supply: {
+          current: selectedItem.circulating_supply || 0,
+          max: selectedItem.total_supply || 0,
+          percentCirculating: selectedItem.total_supply
+            ? (selectedItem.circulating_supply / selectedItem.total_supply) * 100
+            : 100,
+        },
+        volumeRank: Math.floor(Math.random() * 20) + 1,
+        volatility: Math.abs(selectedItem.price_change_percentage_24h) || Math.random() * 5,
+        marketShare: ((selectedItem.market_cap || 0) / 2500000000000) * 100, // Assuming total market cap of 2.5T
+      })
     }
   }
 
@@ -669,6 +900,7 @@ const Predict = () => {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.3 }}
           >
             <div className="notification-content">
               <div className="notification-icon">
@@ -706,50 +938,298 @@ const Predict = () => {
         </div>
         <div className="coin-price-info">
           <div className="current-price">${selectedItem.current_price.toLocaleString()}</div>
-          <div className={`price-change ${selectedItem.price_change_percentage_24h >= 0 ? "positive" : "negative"}`}>
-            {selectedItem.price_change_percentage_24h >= 0 ? "▲" : "▼"}{" "}
-            {Math.abs(selectedItem.price_change_percentage_24h).toFixed(2)}%
-          </div>
-          <div className="secondary-price">${(selectedItem.current_price * 0.99).toFixed(2)}</div>
-          <div className={`secondary-change positive`}>▲ {(Math.random() * 10).toFixed(2)}%</div>
+          {isPredicting && probabilityData && (
+            <div
+              className={`predicted-price ${(probabilityData.predictedPrice || 0) > selectedItem.current_price ? "positive" : "negative"}`}
+            >
+              Predicted: ${(probabilityData.predictedPrice || selectedItem.current_price * 1.05).toFixed(2)}
+            </div>
+          )}
           <div className="timestamp">
             {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
           </div>
         </div>
       </div>
 
-      <div className="chart-container">
-        {loading ? (
-          <div className="loading-container">
-            <div className="loader"></div>
-            <p>Loading chart data...</p>
-          </div>
+      <div className="chart-and-probability-container">
+        <div className="chart-wrapper">
+          {loading ? (
+            <div className="loading-container">
+              <div className="loader"></div>
+              <p>Loading chart data...</p>
+            </div>
+          ) : (
+            <>
+              <canvas ref={chartRef} width="800" height="400" className="price-chart"></canvas>
+              {error && <div className="error-message">{error}</div>}
+            </>
+          )}
+        </div>
+
+        {/* Right panel - conditionally show either coin details, probability panel, or stats panel */}
+        {showStats ? (
+          <motion.div
+            className="stats-panel"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="stats-panel-header">
+              <h3>Stats</h3>
+              <PieChart size={16} className="stats-icon" />
+            </div>
+            <div className="stats-panel-content">
+              <div className="stats-gauge-container">
+                <canvas ref={statsChartRef} width="250" height="250" className="stats-chart"></canvas>
+              </div>
+              {coinStats && (
+                <div className="stats-additional-info">
+                  <div className="stats-row">
+                    <div className="stats-label">Market Cap Rank</div>
+                    <div className="stats-value">#{coinStats.marketCapRank}</div>
+                  </div>
+                  <div className="stats-row">
+                    <div className="stats-label">24h Change</div>
+                    <div className={`stats-value ${coinStats.changePercent24Hr >= 0 ? "positive" : "negative"}`}>
+                      {coinStats.changePercent24Hr >= 0 ? "+" : ""}
+                      {coinStats.changePercent24Hr.toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className="stats-row">
+                    <div className="stats-label">Volatility</div>
+                    <div className="stats-value">{coinStats.volatility.toFixed(2)}</div>
+                  </div>
+                  <div className="stats-row">
+                    <div className="stats-label">Market Share</div>
+                    <div className="stats-value">{coinStats.marketShare.toFixed(2)}%</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        ) : showProbability ? (
+          <motion.div
+            className="probability-panel"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="analysis-summary">
+              <div className="confidence-meter">
+                <div className="confidence-label">Confidence</div>
+                <div className="confidence-bar">
+                  <div className="confidence-value" style={{ width: `${probabilityData?.confidence || 75}%` }}></div>
+                </div>
+                <div className="confidence-percentage">{probabilityData?.confidence || 75}%</div>
+              </div>
+
+              <div className="trend-indicator-small">
+                <div className={`trend-badge ${probabilityData?.trend === "bullish" ? "bullish" : "bearish"}`}>
+                  {probabilityData?.trend === "bullish" ? "Bullish ▲" : "Bearish ▼"}
+                </div>
+              </div>
+
+              <div className="key-predictions">
+                <div className="prediction-row">
+                  <div className="prediction-label">Support:</div>
+                  <div className="prediction-value">
+                    ${(probabilityData?.support || selectedItem.current_price * 0.95).toFixed(2)}
+                  </div>
+                </div>
+                <div className="prediction-row">
+                  <div className="prediction-label">Resistance:</div>
+                  <div className="prediction-value">
+                    ${(probabilityData?.resistance || selectedItem.current_price * 1.05).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="metrics-mini">
+                <div className="metric-mini">
+                  <div className="metric-mini-label">Volatility</div>
+                  <div className="metric-mini-value">
+                    {(probabilityData?.volatility || Math.abs(selectedItem.price_change_percentage_24h) * 0.5).toFixed(
+                      2,
+                    )}
+                    %
+                  </div>
+                </div>
+
+                <div className="metric-mini">
+                  <div className="metric-mini-label">Momentum</div>
+                  <div
+                    className={`metric-mini-value ${(probabilityData?.momentum || 0) > 0 ? "positive" : "negative"}`}
+                  >
+                    {(probabilityData?.momentum || 0) > 0 ? "+" : ""}
+                    {(probabilityData?.momentum || 0).toFixed(2)}%
+                  </div>
+                </div>
+
+                <div className="metric-mini">
+                  <div className="metric-mini-label">Risk</div>
+                  <div className="metric-mini-value">{probabilityData?.riskScore || 5}/10</div>
+                </div>
+
+                <div className="metric-mini">
+                  <div className="metric-mini-label">Confidence</div>
+                  <div className="metric-mini-value">{probabilityData?.confidence || 75}%</div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         ) : (
-          <>
-            <canvas ref={chartRef} width="800" height="400" className="price-chart"></canvas>
-            {error && <div className="error-message">{error}</div>}
-          </>
+          <motion.div
+            className="coin-details-panel"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="coin-details-header">
+              <h3>Coin Details</h3>
+              <Info size={16} className="info-icon" />
+            </div>
+
+            {coinDetails && (
+              <div className="coin-details-content">
+                <div className="coin-description">
+                  <p>{coinDetails.description}</p>
+                </div>
+
+                <div className="coin-metrics">
+                  <div className="coin-metric">
+                    <div className="metric-icon">
+                      <TrendingUp size={16} />
+                    </div>
+                    <div className="metric-content">
+                      <div className="metric-label">Market Dominance</div>
+                      <div className="metric-value">{coinDetails.marketDominance.toFixed(2)}%</div>
+                    </div>
+                  </div>
+
+                  <div className="coin-metric">
+                    <div className="metric-icon">
+                      <BarChart2 size={16} />
+                    </div>
+                    <div className="metric-content">
+                      <div className="metric-label">Volatility Score</div>
+                      <div className="metric-value">{coinDetails.volatilityScore.toFixed(1)}/10</div>
+                    </div>
+                  </div>
+
+                  <div className="coin-metric">
+                    <div className="metric-icon">
+                      <DollarSign size={16} />
+                    </div>
+                    <div className="metric-content">
+                      <div className="metric-label">All-Time High</div>
+                      <div className="metric-value">${formatNumber(coinDetails.priceHistory.allTimeHigh)}</div>
+                    </div>
+                  </div>
+
+                  <div className="coin-metric">
+                    <div className="metric-icon">
+                      <Clock size={16} />
+                    </div>
+                    <div className="metric-content">
+                      <div className="metric-label">YTD Change</div>
+                      <div
+                        className={`metric-value ${coinDetails.priceHistory.yearToDateChange >= 0 ? "positive" : "negative"}`}
+                      >
+                        {coinDetails.priceHistory.yearToDateChange >= 0 ? "+" : ""}
+                        {coinDetails.priceHistory.yearToDateChange}%
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="coin-metric">
+                    <div className="metric-icon">
+                      <Award size={16} />
+                    </div>
+                    <div className="metric-content">
+                      <div className="metric-label">Liquidity Score</div>
+                      <div className="metric-value">{coinDetails.liquidityScore}/100</div>
+                    </div>
+                  </div>
+
+                  <div className="coin-metric">
+                    <div className="metric-icon">
+                      <AlertTriangle size={16} />
+                    </div>
+                    <div className="metric-content">
+                      <div className="metric-label">Risk Level</div>
+                      <div className="metric-value">
+                        {coinDetails.volatilityScore < 3 ? "Low" : coinDetails.volatilityScore < 7 ? "Medium" : "High"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="market-sentiment">
+                  <h4>Market Sentiment</h4>
+                  <div className="sentiment-bars">
+                    <div className="sentiment-bar">
+                      <div className="sentiment-label">Bullish</div>
+                      <div className="sentiment-progress">
+                        <div
+                          className="sentiment-progress-bar bullish"
+                          style={{ width: `${coinDetails.sentimentData.bullish}%` }}
+                        ></div>
+                      </div>
+                      <div className="sentiment-value">{coinDetails.sentimentData.bullish}%</div>
+                    </div>
+
+                    <div className="sentiment-bar">
+                      <div className="sentiment-label">Bearish</div>
+                      <div className="sentiment-progress">
+                        <div
+                          className="sentiment-progress-bar bearish"
+                          style={{ width: `${coinDetails.sentimentData.bearish}%` }}
+                        ></div>
+                      </div>
+                      <div className="sentiment-value">{coinDetails.sentimentData.bearish}%</div>
+                    </div>
+
+                    <div className="sentiment-bar">
+                      <div className="sentiment-label">Neutral</div>
+                      <div className="sentiment-progress">
+                        <div
+                          className="sentiment-progress-bar neutral"
+                          style={{ width: `${coinDetails.sentimentData.neutral}%` }}
+                        ></div>
+                      </div>
+                      <div className="sentiment-value">{coinDetails.sentimentData.neutral}%</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="exchange-distribution">
+                  <h4>Trading Volume by Exchange</h4>
+                  <div className="exchange-bars">
+                    {coinDetails.exchanges.map((exchange, index) => (
+                      <div className="exchange-bar" key={index}>
+                        <div className="exchange-label">{exchange.name}</div>
+                        <div className="exchange-progress">
+                          <div className="exchange-progress-bar" style={{ width: `${exchange.percentage}%` }}></div>
+                        </div>
+                        <div className="exchange-value">{exchange.percentage}%</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
         )}
       </div>
 
       <div className="chart-controls">
-        <div className="control-button-group">
-          <motion.button
-            className="control-button portfolio-button"
-            onClick={handleAddToPortfolio}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Add to Portfolio
-          </motion.button>
-        </div>
-
         <div className="timeframe-selector">
           <span>Timeframe:</span>
-          {["1h", "24h", "7d", "30d", "90d", "1y"].map((tf) => (
+          {["30m", "1h", "4h", "24h"].map((tf) => (
             <button
               key={tf}
-              className={`timeframe-button ${timeframe === tf ? "active" : ""}`}
+              className={`timeframe-button ${timeframe === tf ? "active" : ""} ${pendingTimeframe === tf ? "pending" : ""}`}
               onClick={() => handleTimeframeChange(tf)}
             >
               {tf}
@@ -774,6 +1254,22 @@ const Predict = () => {
             whileTap={{ scale: 0.95 }}
           >
             Probability
+          </motion.button>
+          <motion.button
+            className={`control-button stats-button ${showStats ? "active" : ""}`}
+            onClick={handleStatsClick}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Stats
+          </motion.button>
+          <motion.button
+            className="control-button portfolio-button"
+            onClick={handleAddToPortfolio}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Add to Portfolio
           </motion.button>
         </div>
       </div>
@@ -807,93 +1303,6 @@ const Predict = () => {
                   : formatNumber(selectedItem.current_price * (1 + Math.random()))}
               </div>
             </div>
-          </div>
-        </div>
-
-        {showProbability && (
-          <motion.div
-            className="probability-container"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <h2>Price Analysis for {selectedItem.name}</h2>
-            <div className="prediction-details">
-              <div className="prediction-item">
-                <div className="prediction-label">Market Trend</div>
-                <div className={`prediction-value ${probabilityData?.trend === "bullish" ? "positive" : "negative"}`}>
-                  {probabilityData?.trend === "bullish" ? "Bullish ▲" : "Bearish ▼"}
-                </div>
-              </div>
-              <div className="prediction-item">
-                <div className="prediction-label">Confidence</div>
-                <div className="prediction-value">{probabilityData?.confidence || 75}%</div>
-              </div>
-              <div className="prediction-item">
-                <div className="prediction-label">Predicted Price</div>
-                <div
-                  className={`prediction-value ${(probabilityData?.predictedPrice || 0) > selectedItem.current_price ? "positive" : "negative"}`}
-                >
-                  ${(probabilityData?.predictedPrice || selectedItem.current_price * 1.05).toFixed(2)}
-                </div>
-              </div>
-              <div className="prediction-item">
-                <div className="prediction-label">Volatility</div>
-                <div className="prediction-value">
-                  {(probabilityData?.volatility || Math.abs(selectedItem.price_change_percentage_24h) * 0.5).toFixed(2)}
-                  %
-                </div>
-              </div>
-              <div className="prediction-item">
-                <div className="prediction-label">Support Level</div>
-                <div className="prediction-value">
-                  ${(probabilityData?.support || selectedItem.current_price * 0.95).toFixed(2)}
-                </div>
-              </div>
-              <div className="prediction-item">
-                <div className="prediction-label">Resistance Level</div>
-                <div className="prediction-value">
-                  ${(probabilityData?.resistance || selectedItem.current_price * 1.05).toFixed(2)}
-                </div>
-              </div>
-              <div className="prediction-item">
-                <div className="prediction-label">Price Momentum</div>
-                <div className={`prediction-value ${(probabilityData?.momentum || 0) > 0 ? "positive" : "negative"}`}>
-                  {(probabilityData?.momentum || 0).toFixed(2)}%
-                </div>
-              </div>
-              <div className="prediction-item">
-                <div className="prediction-label">Avg Daily Change</div>
-                <div
-                  className={`prediction-value ${(probabilityData?.avgDailyChange || 0) > 0 ? "positive" : "negative"}`}
-                >
-                  {(probabilityData?.avgDailyChange || 0).toFixed(2)}%
-                </div>
-              </div>
-              <div className="prediction-item">
-                <div className="prediction-label">Volume Prediction</div>
-                <div className="prediction-value">
-                  ${formatNumber(probabilityData?.volumePrediction || selectedItem.total_volume)}
-                </div>
-              </div>
-            </div>
-            <div className="prediction-disclaimer">
-              * Analysis based on historical price patterns and market indicators. Not financial advice.
-            </div>
-          </motion.div>
-        )}
-
-        <div className="price-alerts">
-          <h2>Price Alerts</h2>
-          <div className="alert-item active">
-            <div className="alert-direction up">▲</div>
-            <div className="alert-price">${(selectedItem.current_price * 1.1).toFixed(2)}</div>
-            <div className="alert-status">Active</div>
-          </div>
-          <div className="alert-item active">
-            <div className="alert-direction down">▼</div>
-            <div className="alert-price">${(selectedItem.current_price * 0.9).toFixed(2)}</div>
-            <div className="alert-status">Active</div>
           </div>
         </div>
       </div>
