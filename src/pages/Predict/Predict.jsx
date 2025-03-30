@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Info, TrendingUp, BarChart2, DollarSign, Clock, Award, AlertTriangle, PieChart } from "lucide-react"
-import "./predict.css"
+import "./Predict.css"
 
 const Predict = () => {
   const [selectedItem, setSelectedItem] = useState(null)
@@ -303,7 +303,7 @@ const Predict = () => {
         clearInterval(liveUpdateRef.current)
       }
     }
-  }, [selectedItem]) // Only run on initial mount and when selectedItem changes
+  }, [selectedItem, timeframe]) // Only run on initial mount and when selectedItem changes
 
   // Draw stats chart when stats data is available
   useEffect(() => {
@@ -503,7 +503,10 @@ const Predict = () => {
     const canvas = chartRef.current
     const ctx = canvas.getContext("2d")
     const width = canvas.width
-    const height = canvas.height
+    const height = 250 // Reduced from 400
+
+    // Set canvas height
+    canvas.height = height
 
     // Clear the canvas
     ctx.clearRect(0, 0, width, height)
@@ -960,7 +963,7 @@ const Predict = () => {
             </div>
           ) : (
             <>
-              <canvas ref={chartRef} width="800" height="400" className="price-chart"></canvas>
+              <canvas ref={chartRef} width="800" height="250" className="price-chart"></canvas>
               {error && <div className="error-message">{error}</div>}
             </>
           )}

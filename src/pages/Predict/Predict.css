@@ -100,7 +100,7 @@
 .price-chart {
   width: 100%;
   height: 100%;
-  max-height: 400px;
+  max-height: 250px; /* Reduced from 400px */
   border-radius: 8px;
 }
 
@@ -115,6 +115,7 @@
   display: flex;
   flex-direction: column;
   border-left: 1px solid #2a3042;
+  max-height: 300px; /* Added max-height */
 }
 
 .stats-panel-header {
@@ -147,7 +148,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 250px;
+  height: 200px; /* Reduced from 250px */
 }
 
 .stats-chart {
@@ -203,6 +204,9 @@
   border-radius: 10px;
   padding: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: sticky; /* Make controls sticky */
+  bottom: 0;
+  z-index: 10;
 }
 
 .control-button-group {
@@ -516,13 +520,13 @@
   .probability-panel,
   .coin-details-panel {
     width: 100%;
-    max-height: 350px;
+    max-height: 300px; /* Reduced from 350px */
     border-left: none;
     border-top: 1px solid #2a3042;
   }
 
   .chart-wrapper {
-    height: 400px;
+    height: 300px; /* Reduced from 400px */
   }
 }
 
@@ -555,7 +559,7 @@
   .probability-panel,
   .coin-details-panel {
     width: 100%;
-    max-height: 300px;
+    max-height: 250px; /* Reduced from 300px */
     border-left: none;
     border-top: 1px solid #2a3042;
   }
@@ -571,7 +575,7 @@
   }
 
   .chart-wrapper {
-    height: 350px;
+    height: 250px; /* Reduced from 350px */
   }
 
   .tab-button {
@@ -594,12 +598,12 @@
   }
 
   .chart-container {
-    height: 350px;
+    height: 250px; /* Reduced from 350px */
     padding: 10px;
   }
 
   .price-chart {
-    height: 300px;
+    height: 200px; /* Reduced from 300px */
   }
 
   .timeframe-button {
@@ -627,13 +631,13 @@
 
   .chart-wrapper {
     padding: 10px;
-    height: 300px;
+    height: 200px; /* Reduced from 300px */
   }
 
   .probability-panel,
   .coin-details-panel {
     padding: 10px;
-    max-height: 250px;
+    max-height: 200px; /* Reduced from 250px */
   }
 
   .coin-metric,
@@ -1228,7 +1232,7 @@
   position: relative;
   margin-bottom: 20px;
   gap: 20px;
-  min-height: 450px;
+  min-height: 350px; /* Reduced from 450px */
 }
 
 .chart-wrapper {
@@ -1237,10 +1241,11 @@
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow: auto;
   position: relative;
   min-width: 0; /* Important for flexbox child */
   height: auto;
+  max-height: 300px; /* Added max-height */
 }
 
 .probability-panel {
@@ -1253,7 +1258,7 @@
   display: flex;
   flex-direction: column;
   border-left: 1px solid #2a3042;
-  max-height: 450px;
+  max-height: 300px; /* Reduced from 450px */
 }
 
 /* Coin details panel styles */
@@ -1267,6 +1272,7 @@
   display: flex;
   flex-direction: column;
   border-left: 1px solid #2a3042;
+  max-height: 300px; /* Added max-height */
 }
 
 .coin-details-header {
@@ -1674,28 +1680,22 @@
   --index: 5;
 }
 
-/* Make sure we keep the original scrollbar styling */
+/* Custom scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #121621;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: transparent;
+  background: #5bc0de;
   border-radius: 4px;
 }
 
-.coin-details-panel:hover::-webkit-scrollbar-thumb,
-.probability-panel:hover::-webkit-scrollbar-thumb {
-  background: rgba(91, 192, 222, 0.5);
-}
-
-.coin-details-panel::-webkit-scrollbar-thumb:hover,
-.probability-panel::-webkit-scrollbar-thumb:hover {
-  background: rgba(91, 192, 222, 0.8);
+::-webkit-scrollbar-thumb:hover {
+  background: #4ca8c4;
 }
 
